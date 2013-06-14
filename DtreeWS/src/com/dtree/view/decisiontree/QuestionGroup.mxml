@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="utf-8"?>
+<dt:DTreeGroup xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:dt="com.dtree.view.decisiontree.*"
+	xmlns:core="com.dtree.view.decisiontree.core.*" xmlns:prop="com.dtree.view.decisiontree.hints.*" xmlns:comp="com.dtree.view.comps.*" implements="com.dtree.view.decisiontree.IQuestionGroup"
+	resize="resizeHandler(event)" doubleClickEnabled="true" doubleClick="questionDoubleClickHandler(event)">
+	<fx:Metadata>
+		[Event(name="QUESTION_EDIT", type="com.dtree.events.DecisionTreeEvent")]
+		[Event(name="STARTING_QUESTION_CHANGE", type="com.dtree.events.DecisionTreeEvent")]
+		[Event(name="INTELLI_STATS", type="com.dtree.events.DecisionTreeEvent")]
+		[ManagedEvents("QUESTION_EDIT, STARTING_QUESTION_CHANGE, INTELLI_STATS")]
+	</fx:Metadata>
+	<fx:Script>
+		<![CDATA[
+			import com.dtree.common.ResourceStrings;
+			import com.dtree.common.Util;
+			import com.dtree.events.DecisionTreeEvent;
+			import com.dtree.model.presentation.DtreeModuleModel;
+			import com.dtree.model.vo.QVO;
+			import com.dtree.view.common.AssetLocator;
+			import com.dtree.view.decisiontree.core.DTreeInputJack;
+			import com.dtree.view.decisiontree.hints.PropBox;
+			import com.flextoolbox.controls.WireJack;
+			import com.roguedevelopment.objecthandles.constraints.SizeConstraint;
+			
+			import mx.collections.XMLListCollection;
+			import mx.controls.Alert;
+			import mx.core.IVisualElement;
+			import mx.core.UIComponent;
+			import mx.events.CloseEvent;
+			import mx.events.ResizeEvent;
+			import mx.utils.StringUtil;
+			
+			import spark.components.RadioButtonGroup;
+			import spark.skins.spark.VScrollBarSkin;
+			private function onBtnClick(e: MouseEvent): void
+			{
+				Alert.show(ResourceStrings.DELETE_MESSAGE, ResourceStrings.CONFIRMATION_STR, Alert.YES | Alert.NO, null, closeHandler, AssetLocator.INFO);
+			}
+			override public function get propertyBox(): PropBox
+			{
+				return propBox;
+			}
+			private function closeHandler(e: CloseEvent): void
+			{
+				if(e.detail == Alert.YES)
+				{
+					DtreeUtils.removeDtreeGroupBox(this);
+					if(dtreeGrp.selection == startingQuestionRB)
+					{
+						dtreeGrp.selection = null;
+					}
+					dtreeModel.questions.refresh();
+				}
+			}
+			[Inject(id="dTreeGrpRB")] [Bindable] public var dtreeGrp: RadioButtonGroup;
+			override protected function updateInternal(): void
+			{
+				super.updateInternal();
+				if(moduleModel != null && moduleModel.isRandom && oh != null)
+				{
+					var constraint: SizeConstraint = oh.constraints[model][0] as SizeConstraint;
+					model.height = constraint.minHeight;
+				}
+			}
+			override protected function getNewSizeConstraint(): SizeConstraint
+			{
+				var result: SizeConstraint = super.getNewSizeConstraint();
+				if(moduleModel.isRandom)
+				{
+					result.maxWidth = result.minWidth;
+					result.maxHeight = QVO.MAX_RANDOMQ_HEIGHT;
+					result.minHeight = QVO.MAX_RANDOMQ_HEIGHT;
+				}
+				return result;
+			}
+			[Init]
+			override public function initView(): void
+			{
+				super.initView();
+				options.visible = collapseBtn.selected;
+				options.includeInLayout = options.visible;
+				collapseBtn.toolTip = collapseBtn.selected ? ResourceStrings.COLLAPSE_TOOLTIP : ResourceStrings.EXPAND_TOOLTIP;
+				collapseBtn.label = collapseBtn.selected ? '-' : '+';
+				if(xml != null)
+				{
+					evidenceText.text = StringUtil.trim(xml.EvidenceText);
+				}
+				evidenceGrp.visible = evidenceText.text != "";
+				evidenceGrp.includeInLayout = evidenceGrp.visible;
+				if(!moduleModel.isRandom)
+				{
+					contextMenu = new ContextMenu();
+					contextMenu.hideBuiltInItems();
+					var mi: ContextMenuItem = new ContextMenuItem(ResourceStrings.INTELLI_STATS);
+					mi.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT, intelliStatsHandler);
+					contextMenu.customItems.push(mi);
+				}
+			}
+			private function intelliStatsHandler(evt: ContextMenuEvent): void
+			{
+				dispatchEvent(new DecisionTreeEvent(xml, DecisionTreeEvent.INTELLI_STATS));
+			}
+			public function collapse(): void
+			{
+				if(xml.@minimized == 0)
+				{
+					collapseBtn.selected = false;
+					collapseBtnHandler(null);
+				}
+			}
+			[Inject] public var moduleModel: DtreeModuleModel;
+			private function collapseBtnHandler(e: Event): void
+			{
+				initView();
+				jacksContainer.removeElement(questionJack);
+				try
+				{
+					var constraint: SizeConstraint = oh.constraints[model][0] as SizeConstraint;
+					var lCollapsed: Boolean = !collapseBtn.selected;
+					var evidenceHeight: Number = evidenceGrp.includeInLayout ? 12 : 0;
+					constraint.minWidth = QVO._WIDTH;
+					constraint.maxWidth = lCollapsed ? QVO._WIDTH : QVO.MAX_WIDTH;
+					constraint.maxHeight = lCollapsed ? (QVO.MAX_COLLAPSED_HEIGHT + evidenceHeight) : (moduleModel.isRandom ? QVO.MAX_RANDOMQ_HEIGHT : QVO.MAX_HEIGHT);
+					constraint.minHeight = lCollapsed ? (QVO.MAX_COLLAPSED_HEIGHT + evidenceHeight) : (moduleModel.isRandom ? QVO.MAX_RANDOMQ_HEIGHT : QVO._HEIGHT);
+					model.width = constraint.minWidth;
+					model.height = constraint.minHeight;
+					for(var i: int = 0; i < options.dataGroup.numElements; i++)
+					{
+						var renderer: OptionRenderer = options.dataGroup.getElementAt(i) as OptionRenderer;
+						if(renderer != null && renderer.optionJack != null)
+						{
+							if(lCollapsed)
+							{
+								renderer.optionJack.x = 0;
+								renderer.optionJack.y = 0;
+								jacksContainer.addElement(renderer.optionJack);
+							}
+							else
+							{
+								for(var j: int = 0; j < jacksContainer.numElements; j++)
+								{
+									var aElement: IVisualElement = jacksContainer.getElementAt(j);
+									if(aElement is DTreeInputJack && renderer.data == DTreeInputJack(aElement).dtreeData)
+									{
+										renderer.renderGrp.addElement(aElement);
+										break;
+									}
+								}
+							}
+						}
+					}
+				}
+				finally
+				{
+					jacksContainer.addElement(questionJack);
+				}
+			}
+			private static const defaultBColor: uint = 0x777777;
+			[Bindable] private var defaultBorderColor: uint = defaultBColor;
+			private static const defaultBWeight: Number = 1;
+			[Bindable] private var defaultBorderWeight: Number = defaultBWeight;
+			private function isCompleted(): Boolean
+			{
+				var result: Boolean = true;
+				for(var i: int = 0; i < options.dataGroup.numElements; i++)
+				{
+					var renderer: OptionRenderer = options.dataGroup.getElementAt(i) as OptionRenderer;
+					result = (renderer != null && renderer.optionJack != null && renderer.optionJack.connectedJacks.length > 0);
+					if(!result)
+					{
+						break;
+					}
+				}
+				return result;
+			}
+			private function changeHdrClr(completed: Boolean): void
+			{
+				hdrRect.fill = startingQuestionRB.selected ? (completed ? completedStartingQHdrClr : startingQHdrClr) : (completed ? completedHdrClr : hdrClr);
+			}
+			[Command(selector="CONNECT_STATUS_CHANGE")]
+			public function connectStatusChange(e: DecisionTreeEvent): void
+			{
+				var completed: Boolean = isCompleted();
+				for(var i: int = 0; i < options.dataGroup.numElements; i++)
+				{
+					var renderer: OptionRenderer = options.dataGroup.getElementAt(i) as OptionRenderer;
+					if(renderer != null)
+					{
+						renderer.bgRect.alpha = completed ? 0 : 0.4;
+					}
+				}
+				updateRange();
+				shadowColor.color = completed ? 0xFFFFFF : 0x000000;
+				changeHdrClr(completed);
+			}
+			private function resizeHandler(e: ResizeEvent):void
+			{
+				options.invalidateDisplayList();
+			}
+			override public function get jack(): WireJack
+			{
+				return questionJack;
+			}
+			private function checkForScrollBar(c: UIComponent): Boolean
+			{
+				return c is VScrollBarSkin ? true : c.parent is VScrollBarSkin;
+			}
+			private function optionsMouseDownHandler(e: MouseEvent):void
+			{
+				if(e.currentTarget is List && checkForScrollBar(UIComponent(e.target)))
+				{
+					Util.killEvent(e);
+					model.isLocked = true;
+				}
+			}
+			private function optionsMouseUpHandler(e: MouseEvent): void
+			{
+				if(model.isLocked)
+				{
+					model.isLocked = false;
+				}
+			}
+			private function questionDoubleClickHandler(e: MouseEvent): void
+			{
+				if(!moduleModel.isRandom)
+				{
+					dispatchEvent(new DecisionTreeEvent(xml.QuestionID, DecisionTreeEvent.QUESTION_EDIT));
+				}
+			}
+			public function startingQStatusChange(): void
+			{
+				changeHdrClr(isCompleted());
+			}
+			[Inject] public var helper: DTreeHelper;
+			public function updateRange(): void
+			{
+				const f: Function = function(clr: uint, bWeight: Number): void
+					{
+						defaultBorderColor = clr;
+						defaultBorderWeight = bWeight;
+					};
+				const f1: Function = function (): void
+					{
+						f(defaultBColor, defaultBWeight);
+					};
+				const checkForLevel: Function = function(level: Number): Boolean
+					{
+						var result: Boolean = helper != null && helper.treeCanvas != null && helper.treeCanvas.host != null && helper.treeCanvas.host.levels != null;
+						if(result)
+						{
+							var lvls: ILevels = helper.treeCanvas.host.levels;
+							result = lvls.minLevel > level || lvls.maxLevel < level; 
+						}
+						return result;
+					};
+				var lFlag: Boolean = checkForLevel(xml.QuestionLevel);
+				moduleModel.isRandom ? (lFlag ? f(0xAA1111, 2.5) : f1()) : f1();
+				var completed: Boolean = isCompleted();
+				borderStroke.color = completed ? (moduleModel.isRandom ? defaultBorderColor : 0x7F88DD) : defaultBorderColor;
+				bgRect.fill = completed ? (moduleModel.isRandom ? (lFlag ? completedBgClrRange : completedBgClr) : completedBgClr ) : (moduleModel.isRandom ? (lFlag ? bgClrRange : bgClr) : bgClr);
+			}
+			private function startingQuestionClickHandler(e: MouseEvent): void
+			{
+				dispatchEvent(new DecisionTreeEvent(null, DecisionTreeEvent.STARTING_QUESTION_CHANGE));
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:LinearGradient id="completedHdrClr" rotation="90">
+			<s:entries>
+				<s:GradientEntry color="0xFFFFFF"/>
+				<s:GradientEntry color="0xDDDDDD"/>
+				<s:GradientEntry color="0xBBBBBB"/>
+			</s:entries>
+		</s:LinearGradient>
+		<s:LinearGradient id="hdrClr" rotation="90">
+			<s:entries>
+				<s:GradientEntry color="0x666666"/>
+				<s:GradientEntry color="0xFFFFFF"/>
+				<s:GradientEntry color="0x666666"/>
+			</s:entries>
+		</s:LinearGradient>
+		<s:LinearGradient id="completedStartingQHdrClr" rotation="90">
+			<s:entries>
+				<s:GradientEntry color="0xFFFF00"/>
+				<s:GradientEntry color="0xDDDD00"/>
+				<s:GradientEntry color="0xBBBB00"/>
+			</s:entries>
+		</s:LinearGradient>
+		<s:LinearGradient id="startingQHdrClr" rotation="90">
+			<s:entries>
+				<s:GradientEntry color="0xAAAA00"/>
+				<s:GradientEntry color="0x888800"/>
+				<s:GradientEntry color="0x666600"/>
+			</s:entries>
+		</s:LinearGradient>
+		<s:LinearGradient id="bgClr" rotation="90">
+			<s:entries>
+				<s:GradientEntry color="0xFFFFFF"/>
+				<s:GradientEntry color="0xEEEEEE"/>
+				<s:GradientEntry color="0xDDDDDD"/>
+			</s:entries>
+		</s:LinearGradient>
+		<s:LinearGradient id="completedBgClr" rotation="90">
+			<s:entries>
+				<s:GradientEntry color="0xAA99FF"/>
+				<s:GradientEntry color="0x7766CC"/>
+				<s:GradientEntry color="0x443399"/>
+			</s:entries>
+		</s:LinearGradient>
+		<s:LinearGradient id="bgClrRange" rotation="90">
+			<s:entries>
+				<s:GradientEntry color="0xFFEEAA"/>
+				<s:GradientEntry color="0xEEDD99"/>
+				<s:GradientEntry color="0xDDCC88"/>
+			</s:entries>
+		</s:LinearGradient>
+		<s:LinearGradient id="completedBgClrRange" rotation="90">
+			<s:entries>
+				<s:GradientEntry color="0x99AAAA"/>
+				<s:GradientEntry color="0x667799"/>
+				<s:GradientEntry color="0x334477"/>
+			</s:entries>
+		</s:LinearGradient>
+	</fx:Declarations>
+	<dt:layout>
+		<s:BasicLayout/>
+	</dt:layout>
+	<s:Rect width="100%" height="100%" radiusX="5" radiusY="5" alpha="0.4">
+		<s:filters>
+			<s:DropShadowFilter blurX="20" blurY="20" distance="11" angle="90" knockout="true" alpha="0.5"/>
+		</s:filters>
+		<s:fill>
+			<s:SolidColor color="0x000000" id="shadowColor"/>
+		</s:fill>
+	</s:Rect>
+	<s:Rect width="100%" height="100%" radiusX="5" radiusY="5" alpha="0.4" fill="{bgClr}" id="bgRect">
+		<s:stroke>
+			<s:SolidColorStroke id="borderStroke" color="{defaultBorderColor}" weight="{defaultBorderWeight}"/>
+		</s:stroke>
+	</s:Rect>
+	<s:VGroup width="100%" height="100%" paddingBottom="1" paddingLeft="1" paddingRight="1" paddingTop="1" horizontalAlign="center" verticalAlign="middle" gap="0">
+		<s:Group width="100%">
+			<s:Rect radiusX="0" radiusY="0" width="100%" height="100%" horizontalCenter="0" verticalCenter="0" id="hdrRect" alpha="0.4" fill="{hdrClr}"/>
+			<s:HGroup width="100%" horizontalAlign="center" verticalAlign="middle" paddingBottom="1" paddingLeft="2" paddingRight="1" paddingTop="1" gap="1">
+				<s:VGroup gap="2" verticalAlign="middle" horizontalAlign="center" height="100%" paddingLeft="1" paddingRight="1">
+					<s:RadioButton id="startingQuestionRB" group="{dtreeGrp}" height="13" width="13" toolTip="{ResourceStrings.STARTING_QUESTION_TOOLTIP}" click="startingQuestionClickHandler(event)"/>
+					<comp:IconButton skinClass="com.dtree.view.comps.skins.DtreeGroupDeleteButtonSkin" width="13" height="13"
+									 icon="{AssetLocator.DELETE_NORMAL}" overIcon="{AssetLocator.DELETE_ROLLOVER}" downIcon="{AssetLocator.DELETE_ROLLOVER}"
+									 buttonMode="true" click="onBtnClick(event)" toolTip="{ResourceStrings.DELETE}"/>
+				</s:VGroup>
+				<s:Label text="{_xml.QuestionName}" width="100%" textAlign="justify" maxDisplayedLines="1" showTruncationTip="true" styleName="question"/>
+				<s:VGroup gap="2" verticalAlign="middle" horizontalAlign="center" height="100%" paddingLeft="1">
+					<s:Group id="jacksContainer" maxHeight="13" maxWidth="13">
+						<core:DTreeOutputJack id="questionJack" wireManager="{surface}" mouseDown="Util.killEvent(event); model.isLocked = true"
+											  mouseUp="model.isLocked = false" dtreeData="{_xml}" styleName="myCustomizedJack"/>
+					</s:Group>
+					<s:ToggleButton id="collapseBtn" selected="true" height="13" width="13" change="collapseBtnHandler(event)" cornerRadius="5"
+									horizontalCenter="0" verticalCenter="0" skinClass="com.dtree.view.comps.skins.MyToggleButtonSkin"/>
+				</s:VGroup>
+			</s:HGroup>
+		</s:Group>
+		<s:List id="options" skinClass="com.dtree.view.comps.skins.TransparentListSkin" width="100%" height="100%" dataProvider="{new XMLListCollection(_xml.Options..OptionName)}"
+				itemRenderer="com.dtree.view.decisiontree.OptionRenderer" alternatingItemColors="[0xFFFFFF, 0xEEEEEE]" horizontalScrollPolicy="off"
+				mouseDown="optionsMouseDownHandler(event)" mouseUp="optionsMouseUpHandler(event)" useVirtualLayout="false"/>
+		<s:Group id="evidenceGrp" width="100%" height="12">
+			<s:Rect radiusX="0" radiusY="0" width="100%" height="100%" horizontalCenter="0" verticalCenter="0" alpha="0.4" fill="{hdrClr}" stroke="{borderStroke}"/>
+			<s:Label id="evidenceText" width="100%" textAlign="justify" maxDisplayedLines="1" showTruncationTip="true" styleName="evidenceState"/>
+		</s:Group>
+		<prop:PropBox id="propBox"/>
+	</s:VGroup>
+</dt:DTreeGroup>

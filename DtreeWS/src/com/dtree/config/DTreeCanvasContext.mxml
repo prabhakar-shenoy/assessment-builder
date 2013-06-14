@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<parsley:Objects xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:parsley="http://www.spicefactory.org/parsley">
+	<fx:Script>
+		<![CDATA[
+			import com.dtree.model.presentation.DtreeModuleModel;
+			import com.dtree.view.decisiontree.DTreeCanvasHelper;
+			import com.dtree.view.decisiontree.DTreeHelper;
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<parsley:Object type="{DtreeModuleModel}"/>
+		<parsley:Object type="{DTreeCanvasHelper}"/>
+		<parsley:Object type="{DTreeHelper}">
+			<parsley:ManagedEvents names="['MERGE_DTREE', 'UPDATE_DECISIONTREE']"/>
+		</parsley:Object>
+	</fx:Declarations>
+</parsley:Objects>

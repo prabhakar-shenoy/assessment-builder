@@ -1,0 +1,200 @@
+/* CSS file */
+@namespace s "library://ns.adobe.com/flex/spark";
+@namespace mx "library://ns.adobe.com/flex/mx";
+@namespace containers "com.iwobanas.containers.*";
+@namespace tx "http://tx.teotigraphix.org/flex4";
+
+
+global {
+	background-alpha : 0;
+	color: 	#a0304c;
+/*	color: 	#aF3f5F; */
+	font-size: 12;
+	disabled-color: #a63f50;
+	disabled-icon-color: #a63f50;
+}
+
+.question{
+	font-weight: bold;
+	color: #005500;
+	/*background-color: #AAAAAA; */
+}
+
+.answerState{
+/*	font-weight: bold; */
+	color: #330013;
+	/*background-color: #AAAAAA; */
+}
+
+.oopsState{
+	/*	font-weight: bold; */
+	color: #FA0013;
+	/*background-color: #AAAAAA; */
+}
+
+.evidenceState{
+	font-weight: bold;
+	color: #055505;
+	/*background-color: #AAAAAA; */
+}
+
+.assetLinkStyle
+{
+	color: #10AF20;
+	text-decoration: underline;
+	/*background-color: #AAAAAA; */
+}
+.assetStyle
+{
+	color: #0F5A0F;
+	/*background-color: #AAAAAA; */
+}
+tx|TabNavigator
+{
+	padding-bottom: 3;
+	padding-top: 3;
+	padding-left: 3;
+	padding-right: 3;
+}
+
+s|TitleWindow
+{
+	cornerRadius: 9;
+	dropShadowVisible: true;
+	border-visible: "false";
+	rounded-bottom: "true";
+	background-color: #FFFFFF;
+}
+
+containers|CollapsiblePanel {
+	skin-class: ClassReference('com.iwobanas.skins.CollapsiblePanelSkin');
+	border-visible: "false";
+	background-color: #FFFFFF;
+}
+
+s|Application {
+	background-alpha: 0;
+	background-color: #EEEEEE;
+	horizontal-align: left;
+}
+
+s|Button {
+	chrome-color: #cbdccb;
+	corner-radius:10;
+	highlightAlphas:0.59, 0.5;
+	fillAlphas:1, 1, 1, 1;
+	fillColors:#040404, #4c4c4c, #c60303, #ff4300;
+	color: #116d40;
+	textRollOverColor:#ffffff;
+	border-color:#AFAFAF;
+}
+
+.vGroup {
+	padding-bottom: 10;
+	padding-top: 10;
+	padding-left: 10;
+	padding-right: 10;
+}
+
+s|List {
+	background-color: #f9ebe8;
+	horizontal-align: left;
+	border-color: #09e0e8;
+	border-alpha: 0;
+}
+
+s|RichEditableText {
+	color: #0A0A0A;
+}
+
+.myCustomizedJack
+{
+	/* skin: ClassReference("com.flextoolbox.jacksIntro.skins.CustomWireJackSkin"); */
+	/* The source code for this drag image skin is included with the Wires Library. It was not made specifically for this example. */
+	dragImage: ClassReference("com.flextoolbox.skins.halo.WireJackArrowDragImage");
+}
+
+.dtreeContainer
+{
+	padding-bottom:1;
+	padding-left:1;
+	padding-right:1;
+	padding-top:1;
+	horizontal-align: center;
+	vertical-align: middle;
+}
+
+.myCustomizedWireSurface
+{
+	wireSkin: ClassReference("com.dtree.view.decisiontree.core.DefaultDTreeWireRenderer");
+	background-alpha: 0;
+}
+
+mx|Alert
+{
+	borderStyle:solid;
+	borderColor:#333333;
+	background-color:#ffffff;
+	borderAlpha:0;
+	cornerRadius:2;
+	headerHeight:21;
+	backgroundAlpha:0.9;
+	titleStyleName:"alertTitle";
+	message-style-name:"messageStyle";
+	button-style-name:"alertButtons";
+}
+
+.alertTitle
+{
+	fontSize:11;
+	color:#333333;
+	font-weight:bold;
+}
+
+.norecords
+{
+	alpha: 0.65;
+	fontSize: 22;
+	/*font-weight:bold; */
+}
+
+.messageStyle
+{
+	letterSpacing:0;
+	color:#333333;
+	textAlign:left;
+	fontSize:11;
+	font-weight:normal;
+}
+
+.alertButtons
+{
+	cornerRadius:4;
+	highlightAlphas:0.59, 0.5;
+	fillAlphas:1, 1, 1, 1;
+	fillColors:#040404, #4c4c4c, #c60303, #ff4300;
+	color:#116d40;
+	textRollOverColor:#116d40;
+	borderColor:#474747;
+	themeColor:#cbdccb;
+}
+
+.hLine
+{
+	horizontal-align: center;
+	vertical-align: middle;
+	padding-bottom: 3;
+	padding-top: 3;
+	padding-left: 3;
+	padding-right: 3;
+}
+
+.hintBox
+{
+	horizontal-align: center;
+	vertical-align: middle;
+	padding-bottom: 5;
+	padding-top: 5;
+	padding-left: 5;
+	padding-right: 5;
+}

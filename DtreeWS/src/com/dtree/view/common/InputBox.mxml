@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<common:DtreePanel xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/mx" 
+	xmlns:parsley="http://www.spicefactory.org/parsley" xmlns:comp="com.dtree.view.comps.*" xmlns:common="com.dtree.view.common.*" minHeight="180" minWidth="400" controlBarVisible="true">
+	<common:controlBarContent>
+		<s:HGroup width="100%" paddingLeft="1" paddingRight="10" paddingTop="1" paddingBottom="2" horizontalAlign="right" verticalAlign="middle" gap="2">
+			<comp:IconButton skinClass="com.dtree.view.comps.skins.IconButtonSkin" id="saveButton" label="{ResourceStrings.SAVE}" click="okClick(event)" enabled="false" buttonMode="true"
+				icon="{AssetLocator.SAVE1_NORMAL}" disabledIcon="{AssetLocator.SAVE1_DISABLE}" overIcon="{AssetLocator.SAVE1_ROLLOVER}" downIcon="{AssetLocator.SAVE1_DOWN}"/>
+			<comp:IconButton skinClass="com.dtree.view.comps.skins.IconButtonSkin" id="cancelButton" label="{ResourceStrings.CANCEL_STR}" click="cancelClick(event)" buttonMode="true"
+				icon="{AssetLocator.CANCEL_NORMAL}" disabledIcon="{AssetLocator.CANCEL_DISABLE}" overIcon="{AssetLocator.CANCEL_ROLLOVER}" downIcon="{AssetLocator.CANCEL_DOWN}"/>
+		</s:HGroup>
+	</common:controlBarContent>
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.popup.PopUpWrapper;
+			import com.dtree.common.ResourceStrings;
+
+			[Init]
+			public function initView(): void
+			{
+				collapseButton.visible = false;
+			}
+
+			public var popupWrapper: PopUpWrapper;
+
+			private function cancelClick(e: MouseEvent): void
+			{
+				popupWrapper.open = false;
+			}
+
+			private function changeHandler(event:Event):void
+			{
+				saveButton.enabled = input.text != null && input.text != "";
+			}
+			
+			public var isOk: Boolean = false;
+			private function okClick(e: MouseEvent): void
+			{
+				isOk = true;
+				cancelClick(e);
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<parsley:Configure/>
+	</fx:Declarations>
+	<s:HGroup width="100%" paddingLeft="10" height="100%" paddingRight="10" paddingTop="10" horizontalAlign="right" verticalAlign="middle">
+		<s:RichEditableText id="input" width="100%" height="100%" multiline="true" minHeight="100" keyUp="changeHandler(event)" change="changeHandler(event)"/>
+	</s:HGroup>
+</common:DtreePanel>

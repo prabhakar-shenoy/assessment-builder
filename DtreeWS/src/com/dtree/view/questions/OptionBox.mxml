@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:parsley="http://www.spicefactory.org/parsley" xmlns:comp="com.dtree.view.comps.*" autoDrawBackground="true" 
+	dataChange="dataChangeHandler(event)" creationComplete="dataChangeHandler(event)" currentStateChange="optionStateChangeHandler(event)" width="100%">
+	<fx:Script>
+		<![CDATA[
+			import com.dtree.common.ResourceStrings;
+			import com.dtree.view.common.AssetLocator;
+
+			import mx.events.FlexEvent;
+			import mx.events.StateChangeEvent;
+
+			import spark.components.RadioButtonGroup;
+
+			[Inject(id="questionGrpRB")]
+			[Bindable]
+			public var optionGroup: RadioButtonGroup;
+
+			[Init]
+			public function initView(): void
+			{
+				dataChangeHandler(null);
+			}
+
+			private function dataChangeHandler(e: FlexEvent): void
+			{
+				var dlg: QuestionDialogBox = null;
+				var displayObject: DisplayObject = owner as DisplayObject;
+				while(displayObject != null)
+				{
+					if(displayObject is QuestionDialogBox)
+					{
+						dlg = QuestionDialogBox(displayObject);
+						break;
+					}
+					else
+					{
+						displayObject = displayObject.parent;
+					}
+				}
+				if(dlg)
+				{
+					currentState = dlg.currentState;
+				}
+			}
+
+			private function optionStateChangeHandler(e: StateChangeEvent): void
+			{
+				var flag:Boolean = false;
+				if(data && currentState != "MATCH_FOLLOWING")
+				{
+					flag = String(XML(data).@IsBestAnswer.toString()).toLocaleLowerCase() == 'yes';
+				}
+				switch(currentState)
+				{
+					case "TRUE_FALSE":
+					case "RADIO_BUTTON": rbSelected.selected = flag; break;
+					case "MULTI_CHOICE": chkSelected.selected = flag; break;
+				}
+			}
+		]]>
+	</fx:Script>
+	<s:states>
+		<s:State name="RADIO_BUTTON"/>
+		<s:State name="MULTI_CHOICE"/>
+		<s:State name="MATCH_FOLLOWING"/>
+		<s:State name="TRUE_FALSE"/>
+	</s:states>
+	<fx:Declarations>
+		<parsley:Configure/>
+	</fx:Declarations>
+	<s:layout>
+		<s:HorizontalLayout verticalAlign="middle" horizontalAlign="center" paddingBottom="5" paddingLeft="5" paddingRight="5" paddingTop="5"/>
+	</s:layout>
+	<s:CheckBox id="chkSelected" includeIn="MULTI_CHOICE"/>
+	<s:RadioButton id="rbSelected" group="{optionGroup}" includeIn="RADIO_BUTTON, TRUE_FALSE"/>
+	<s:RichEditableText id="desc1" text="{XML(data).@OptionName}" width="100%" multiline="true"/>
+	<s:RichEditableText id="desc2" text="{XML(data).@IsBestAnswer}" width="100%" multiline="true" includeIn="MATCH_FOLLOWING"/>
+	<comp:IconButton id="deleteBtn" skinClass="com.dtree.view.comps.skins.IconButtonSkin"
+					 icon="{AssetLocator.DELETE_NORMAL}" fontSize="11" width="20" height="20"
+					 overIcon="{AssetLocator.DELETE_ROLLOVER}" downIcon="{AssetLocator.DELETE_NORMAL}"
+					 buttonMode="true" toolTip="{ResourceStrings.DELETE}" includeInLayout="false" visible="false"/>
+</s:ItemRenderer>

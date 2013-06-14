@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:parsley="http://www.spicefactory.org/parsley" xmlns:hints="com.dtree.view.decisiontree.hints.*"
+	width="100%" height="100%" gap="2" styleName="hLine">
+	<fx:Declarations>
+		<parsley:Configure/>
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.dtree.common.ResourceStrings;
+			import com.dtree.view.decisiontree.core.SimpleDataModel;
+			[Inject] [Bindable] public var model: SimpleDataModel;
+			public static const XY_STATE: String = 'xy';
+			public static const HW_STATE: String = 'hw';
+		]]>
+	</fx:Script>
+	<s:states>
+		<s:State name="hw"/>
+		<s:State name="xy"/>
+	</s:states>
+	<hints:HintBox p.xy="{ResourceStrings.X_STR}" v.xy="{model.x}" p.hw="{ResourceStrings.H_STR}" v.hw="{model.height}"/>
+	<hints:HintBox p.xy="{ResourceStrings.Y_STR}" v.xy="{model.y}" p.hw="{ResourceStrings.W_STR}" v.hw="{model.width}"/>
+</s:HGroup>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:parsley="http://www.spicefactory.org/parsley" width="100%" height="100%" currentStateChange="stateChangeHandler(event)">
+	<fx:Metadata>
+		[Event(name="QUESTION_EDIT", type="com.dtree.events.DecisionTreeEvent")]
+		[Event(name="EDIT_DECISIONTREE", type="com.dtree.events.DecisionTreeEvent")]
+		[ManagedEvents("QUESTION_EDIT, EDIT_DECISIONTREE")]
+	</fx:Metadata>
+	<fx:Script>
+		<![CDATA[
+			import com.dtree.common.ResourceStrings;
+			import com.dtree.events.DecisionTreeEvent;
+			import com.dtree.model.presentation.DtreeModel;
+			import com.dtree.view.DTreeTabNavigator;
+			import com.dtree.view.decisiontree.ILevels;
+			import mx.events.StateChangeEvent;
+			[Bindable] private var noRecords: Boolean = true;
+			[Bindable] [Inject] public var dtreeModel: DtreeModel;
+			[Bindable] [Inject] public var nav: DTreeTabNavigator;
+			private function openDTreeHandler(e: MouseEvent): void
+			{
+				if(nav != null && list.selectedIndex != -1)
+				{
+					var xml: XML = XML(list.selectedItem);
+					var idx: int = nav.indexOfTab(xml.@AssessmentTreeID)
+					if(idx != -1)
+					{
+						nav.selectedIndex = idx;
+					}
+					else
+					{
+						dispatchEvent(new DecisionTreeEvent(xml, DecisionTreeEvent.EDIT_DECISIONTREE));
+					}
+				}
+			}
+			private function editQuestionHandler(e: MouseEvent): void
+			{
+				dispatchEvent(new DecisionTreeEvent(XML(dtreeModel.questions[list.selectedIndex]).QuestionID, DecisionTreeEvent.QUESTION_EDIT));
+			}
+			[Command(selector="REFRESH_LIST")]
+			public function updateDisplayScreen(e: DecisionTreeEvent):void
+			{
+				noRecords = list != null && list.dataProvider != null && list.dataProvider.length == 0;
+			}
+			private function stateChangeHandler(e: StateChangeEvent): void
+			{
+				updateDisplayScreen(null);
+				if(currentState == "randomQuestionList")
+				{
+					dtreeModel.randomQuestionLevels.filterFunction = filterFunc;
+					dtreeModel.randomQuestionLevels.refresh();
+				}
+			}
+			private function filterFunc(item: XML): Boolean 
+			{
+				var levels: ILevels = nav != null ? nav.currentLevels : null;
+				var result: Boolean = true;
+				if(levels != null)
+				{
+					result = item.QuestionLevel >= levels.minLevel && item.QuestionLevel <= levels.maxLevel;
+				}
+				return result;
+			}
+		]]>
+	</fx:Script>
+	<s:states>
+		<s:State name="randomQuestionList"/>
+		<s:State name="questionList"/>
+		<s:State name="terminatingActionList"/>
+		<s:State name="decisionTree"/>
+	</s:states>
+	<fx:Declarations>
+		<parsley:Configure/>
+	</fx:Declarations>
+	<s:Label text="{ResourceStrings.NO_RECORDS}" styleName="norecords" width="100%" height="100%" textAlign="center" verticalAlign="middle" maxDisplayedLines="1" alpha="0.35" showTruncationTip="true"
+			 visible="{noRecords}" includeInLayout="{noRecords}"/>
+	<s:List id="list" width="100%" height="100%" itemRenderer="com.dtree.view.description.DescriptionRenderer" visible="{!noRecords}" includeInLayout="{!noRecords}"
+			dataProvider.questionList="{dtreeModel.questions}" dataProvider.decisionTree="{dtreeModel.decisionTrees}" dataProvider.terminatingActionList="{dtreeModel.terminatingActions}"
+			dataProvider.randomQuestionList="{dtreeModel.randomQuestionLevels}" dragEnabled="true" allowMultipleSelection="true" allowMultipleSelection.decisionTree="false" useVirtualLayout="true" useHandCursor="true"
+			doubleClickEnabled.decisionTree="true" doubleClick.decisionTree="openDTreeHandler(event)" doubleClickEnabled.questionList="true" doubleClick.questionList="editQuestionHandler(event)" 
+			alternatingItemColors="[0xFFFFFF, 0xEEEEEE]" horizontalScrollPolicy="off"/>
+</s:VGroup>

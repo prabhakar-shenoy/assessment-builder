@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:parsley="http://www.spicefactory.org/parsley"
+	xmlns:comp="com.dtree.view.comps.*" autoDrawBackground="true" dataChange="dataChangeHandler(event)" creationComplete="dataChangeHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import com.dtree.common.ResourceStrings;
+			import com.dtree.model.presentation.DtreeModel;
+			import com.dtree.view.DTreeTabNavigator;
+			import com.dtree.view.DescriptionList;
+			import com.dtree.view.Extras;
+			import com.dtree.view.common.AssetLocator;
+			import com.dtree.view.comps.skins.DtreeGroupDeleteButtonSkin;
+			import com.dtree.view.decisiontree.DTreeGlobals;
+			import com.dtree.view.decisiontree.ITreeCanvas;
+			
+			import mx.events.FlexEvent;
+			
+			import spark.components.BorderContainer;
+			[Inject] public var dtreeModel: DtreeModel;
+			[Init]
+			public function initView(): void
+			{
+				dataChangeHandler(null);
+			}
+			private function getList(): DescriptionList
+			{
+				var result: DescriptionList = null;
+				var displayObject: DisplayObject = owner as DisplayObject;
+				while(displayObject != null)
+				{
+					if(displayObject is DescriptionList)
+					{
+						result = DescriptionList(displayObject);
+						break;
+					}
+					else
+					{
+						displayObject = displayObject.parent;
+					}
+				}
+				return result;
+			}
+			[Inject] public var navigator: DTreeTabNavigator;
+			private function getCanvas(): BorderContainer
+			{
+				var cvas: ITreeCanvas = navigator != null ? navigator.currentTreeCanvas : null;
+				return cvas != null ? cvas.canvas : null;
+			}
+
+			private function dataChangeHandler(e: FlexEvent): void
+			{
+				var _clr: * = 0xa63f50;
+				bgRect.fill = null;
+				var list: DescriptionList = getList();
+				if(list != null && data != null && navigator != null)
+				{
+					var isDTree: Boolean = list.currentState == "decisionTree";
+					if(list.currentState != "randomQuestionList" || isDTree)
+					{
+						var __xml: XML = XML(data);
+						var lContinue: Boolean = isDTree ? navigator.indexOfTab(__xml.@AssessmentTreeID) != -1 : DTreeGlobals.contains(__xml, getCanvas());
+						var _isRandom: Boolean = isDTree && __xml.@IsRandom == 1;
+						if(lContinue)
+						{
+							_clr = _isRandom ? 0x107F10 : 0x704070;
+							bgRect.fill = bgClr;
+						}
+						else if(_isRandom)
+						{
+							_clr = 0x507F50;
+						}
+					}
+				}
+				setStyle('color', _clr);
+			}
+			[Bindable] private var descriptionStr: String = "description";
+			[Bindable] private var isRandom: Boolean = false;
+			[Bindable] private var isRegularQuestion: Boolean = false;
+			override public function set data(value: Object): void
+			{
+				super.data = value;
+				var list: DescriptionList = getList();
+				if(list != null)
+				{
+					var xml: XML = XML(data);
+					isRandom = list.currentState == "randomQuestionList";
+					isRegularQuestion = list.currentState == "questionList";
+					if(isRandom)
+					{
+						stepCopy.value = xml.ncopy;
+					}
+					switch(list.currentState)
+					{
+						case "randomQuestionList": 
+						case "questionList": descriptionStr = xml.QuestionName; break;
+						case "decisionTree": descriptionStr = xml.@AssessmentName; break;
+						case "terminatingActionList": descriptionStr = xml.TerminatingOptionText; break;
+					}
+				}
+			}
+			private function copiesChangeHandler(e: Event): void
+			{
+				if(data != null)
+				{
+					var xml: XML = XML(data);
+					var nCopy: Number = stepCopy.value;
+					delete xml.ncopy;
+					xml.appendChild(DTreeGlobals.getCopyXML(nCopy));
+					data = xml;
+				}
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<parsley:Configure/>
+		<s:LinearGradient id="bgClr" rotation="90">
+			<s:entries>
+				<s:GradientEntry color="0xFFFF00"/>
+				<s:GradientEntry color="0xDDDD00"/>
+				<s:GradientEntry color="0xBBBB00"/>
+			</s:entries>
+		</s:LinearGradient>
+	</fx:Declarations>
+	<s:Rect radiusX="0" radiusY="0" width="100%" height="100%" horizontalCenter="0" verticalCenter="0" id="bgRect" alpha="0.4"/>
+	<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="center" paddingBottom="1" paddingLeft="1" paddingRight="1" paddingTop="1" gap="2">
+		<comp:IconButton skinClass="com.dtree.view.comps.skins.DtreeGroupDeleteButtonSkin" width="10" height="10" label="i"
+			buttonMode="true" click="Extras.intelliStatsHandler(event)" toolTip="{ResourceStrings.INTELLI_STATS}" includeInLayout="{isRegularQuestion}" visible="{isRegularQuestion}"/>
+		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="center" paddingBottom="4" paddingLeft="4" paddingRight="4" paddingTop="4">
+			<s:Label text="{descriptionStr}" width="100%" textAlign="justify" maxDisplayedLines="1" showTruncationTip="true"/>
+		</s:HGroup>
+		<s:NumericStepper id="stepCopy" value="1" minimum="1" maximum="5" whiteSpaceCollapse="collapse" width="50" change="copiesChangeHandler(event)" includeInLayout="{isRandom}" visible="{isRandom}"/>
+	</s:HGroup>
+</s:ItemRenderer>

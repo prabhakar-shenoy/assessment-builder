@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/mx"
+			   move="dtreeMoveHandler(event)" mouseMove="dtreeMoveHandler(event)" mouseUp="dtreeMoveHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			private function dtreeMoveHandler(event:Event):void
+			{
+				WindowMoveUtil.winMoveHandler(this);
+			}
+			override public function set x(value: Number): void
+			{
+				if(value < 0)
+				{
+					value = 0;
+				}
+				super.x = value;
+			}
+			override public function set y(value: Number): void
+			{
+				if(value < 0)
+				{
+					value = 0;
+				}
+				super.y = value;
+			}
+		]]>
+	</fx:Script>
+</s:TitleWindow>

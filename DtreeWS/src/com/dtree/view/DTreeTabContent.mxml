@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>	
+<s:NavigatorContent xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:parsley="http://www.spicefactory.org/parsley" xmlns:common="com.dtree.view.common.*"
+	width="100%" height="100%" label="{dtreeData.Name}" icon="{AssetLocator.DOCICON}" creationComplete="creationCompleteHandler(event)" currentStateChange="currentStateChangeHandler(event)"
+	implements="com.dtree.view.IHost">
+	<fx:Metadata>
+		[Event(name="DTREE_TYPE_CHANGE", type="com.dtree.events.DTreeTabEvent")]
+		[ManagedEvents("DTREE_TYPE_CHANGE")]
+	</fx:Metadata>
+	<fx:Declarations>
+		<parsley:Configure/>
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.module.IModuleManager;
+			import com.dtree.common.ResourceStrings;
+			import com.dtree.events.DTreeTabEvent;
+			import com.dtree.model.presentation.DtreeModel;
+			import com.dtree.model.vo.DTreeData;
+			import com.dtree.view.common.AssetLocator;
+			import com.dtree.view.common.DtreeModuleViewLoader;
+			import com.dtree.view.decisiontree.ILevels;
+			import com.dtree.view.decisiontree.ITreeCanvas;
+			import com.dtree.view.decisiontree.ITreeModule;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.events.StateChangeEvent;
+			[Bindable] public var dtreeData: DTreeData = new DTreeData();
+			[Inject(id="dTreeCanvas")] [Bindable] public var cModule: IModuleManager;
+			[Inject(id="dTreeCanvasTB")] [Bindable] public var tbModule: IModuleManager;
+			[Inject] public var dtreeModel: DtreeModel;
+			private var contextMenuItm: ContextMenuItem;
+			[Init]
+			public function initView(): void
+			{
+				if(label == "" || label == null)
+				{
+					label = ResourceStrings.NEW_DTREE;
+				}
+				isRandom = false;
+			}
+			private function creationCompleteHandler(e: FlexEvent): void
+			{
+				if(dtreeModel.addNewFlag)
+				{
+					if(!contextMenu)
+					{
+						contextMenu = new ContextMenu();
+					}
+					contextMenuItm = new ContextMenuItem(ResourceStrings.RANDOM_ASSESSMENT_PROMPT, true);
+					contextMenuItm.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT, customMenuItemHandler);
+					contextMenu.customItems.push(contextMenuItm);
+					contextMenu.addEventListener(ContextMenuEvent.MENU_SELECT, menuSelectHandler);
+				}
+			}
+			private function customMenuItemHandler(event: ContextMenuEvent): void 
+			{
+				switch (event.target) 
+				{
+					case contextMenuItm:
+						Alert.show(ResourceStrings.CONFIRM_ASSESSMENTTYPECHANGE_MESSAGE, ResourceStrings.CONFIRMATION_STR, Alert.YES | Alert.NO, null,
+							function (e: CloseEvent): void
+							{
+								if(e.detail == Alert.YES)
+								{
+									isRandom = !isRandom;
+								}
+							}, AssetLocator.INFO);
+						break;
+				}
+			}
+			private function menuSelectHandler(event: ContextMenuEvent):void 
+			{
+				contextMenuItm.caption = isRandom ? ResourceStrings.REGULAR_ASSESSMENT_PROMPT : ResourceStrings.RANDOM_ASSESSMENT_PROMPT;
+			}
+			private static const maxToolBarHeight: Number = 30;
+			private function getModuleFor(loader: DtreeModuleViewLoader): ITreeModule
+			{
+				var result: ITreeModule = null;
+				if(loader != null && loader.loadedModule != null)
+				{
+					result = loader.loadedModule as ITreeModule;
+				}
+				if(result != null && result.host == null)
+				{
+					result.host = this;
+				}
+				return result;
+			}
+			public function get treeCanvas(): ITreeCanvas
+			{
+				return getModuleFor(mvLoader) as ITreeCanvas;
+			}
+			public function get levels(): ILevels
+			{
+				return getModuleFor(mvToolBar) as ILevels;
+			}
+			private function currentStateChangeHandler(e: StateChangeEvent): void
+			{
+				dispatchEvent(new DTreeTabEvent(treeCanvas, DTreeTabEvent.DTREE_TYPE_CHANGE));
+			}
+			public function get isRandom(): Boolean
+			{
+				var cvas: ITreeCanvas = treeCanvas;
+				return cvas != null && cvas.model != null ? cvas.model.isRandom : false;
+			}
+			private static const RANDOM_S: String = 'random';
+			private static const REGULAR_S: String = 'regular';
+			public function set isRandom(value: Boolean): void
+			{
+				var newState: String = REGULAR_S;
+				var cvas: ITreeCanvas = treeCanvas;
+				if(cvas != null && cvas.model != null && cvas.model.isRandom != value)
+				{
+					cvas.model.isRandom = value;
+					newState = cvas.model.isRandom ? RANDOM_S : REGULAR_S;
+				}
+				if(currentState != newState)
+				{
+					currentState = newState;
+				}
+			}
+		]]>
+	</fx:Script>
+	<s:layout>
+		<s:VerticalLayout gap="0"/>
+	</s:layout>
+	<s:states>
+		<s:State name="random"/>
+		<s:State name="regular"/>
+	</s:states>
+	<common:DtreeModuleViewLoader id="mvToolBar" moduleManager="{tbModule}" width="100%" minHeight="{maxToolBarHeight}" maxHeight="{maxToolBarHeight}" includeIn="random"/>
+	<common:DtreeModuleViewLoader id="mvLoader" moduleManager="{cModule}" width="100%" height="100%" includeIn="random, regular"/>
+</s:NavigatorContent>

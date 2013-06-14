@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<common:DtreePanel xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:parsley="http://www.spicefactory.org/parsley" xmlns:common="com.dtree.view.common.*"
+	xmlns:cairngorm="http://ns.adobe.com/cairngorm" xmlns:comp="com.dtree.view.comps.*" xmlns:q="com.dtree.view.questions.*" controlBarVisible="true" minHeight="200" minWidth="450" maxHeight="305" maxWidth="550">
+	<fx:Metadata>
+		[Event(name="QUESTION_SAVE", type="com.dtree.events.DecisionTreeEvent")]
+		[ManagedEvents("QUESTION_SAVE")]
+	</fx:Metadata>
+	<common:layout>
+		<s:VerticalLayout gap="5" paddingBottom="5" paddingLeft="5" paddingRight="5" paddingTop="5" horizontalAlign="left" verticalAlign="middle"/>
+	</common:layout>
+	<common:controlBarContent>
+		<s:HGroup width="100%" paddingLeft="1" paddingRight="10" paddingTop="1" paddingBottom="2" horizontalAlign="right" verticalAlign="middle" gap="2">
+			<comp:IconButton skinClass="com.dtree.view.comps.skins.IconButtonSkin" id="saveButton" label="{ResourceStrings.SAVE}" click="okClick(event)" buttonMode="true"
+				icon="{AssetLocator.SAVE1_NORMAL}" disabledIcon="{AssetLocator.SAVE1_DISABLE}" overIcon="{AssetLocator.SAVE1_ROLLOVER}" downIcon="{AssetLocator.SAVE1_DOWN}"
+				includeInLayout="false" visible="false"/>
+			<comp:IconButton skinClass="com.dtree.view.comps.skins.IconButtonSkin" id="cancelButton" label="{ResourceStrings.CANCEL_STR}" click="cancelClick(event)" buttonMode="true"
+				icon="{AssetLocator.CANCEL_NORMAL}" disabledIcon="{AssetLocator.CANCEL_DISABLE}" overIcon="{AssetLocator.CANCEL_ROLLOVER}" downIcon="{AssetLocator.CANCEL_DOWN}"
+				includeInLayout="false" visible="false"/>
+			<comp:IconButton skinClass="com.dtree.view.comps.skins.IconButtonSkin" label="{ResourceStrings.OK_STR}" click="okClick(event)" buttonMode="true"
+							 icon="{AssetLocator.OK_NORMAL}" disabledIcon="{AssetLocator.OK_DISABLE}" overIcon="{AssetLocator.OK_ROLLOVER}" downIcon="{AssetLocator.OK_DOWN}"/>
+		</s:HGroup>
+	</common:controlBarContent>
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.popup.PopUpWrapper;
+			import com.dtree.common.ResourceStrings;
+			import com.dtree.view.common.AssetLocator;
+			import mx.collections.XMLListCollection;
+			import org.spicefactory.parsley.core.context.Context;
+			public var popupWrapper: PopUpWrapper;
+
+			[Inject]
+			[Bindable]
+			public var context:Context;
+
+			[Init]
+			public function initView(): void
+			{
+				collapseButton.visible = false;
+			}
+
+			private function cancelClick(e: MouseEvent): void
+			{
+				popupWrapper.open = false;
+			}
+			
+			[Bindable]
+			private var promptText: String = "Question Text :";
+			
+			[Bindable]
+			private var question: XML;
+			
+			private function deleteOption(data: OptionBox): void
+			{
+				//question.removeOption(data.option);
+			}
+			
+			private function okClick(e:MouseEvent):void
+			{
+				//question.description = desc.text;
+				/* for (var i:int = 0; i < optionBox.length; i++)
+				{
+					OptionBox(optionBox[i]).updateOption();
+				} */
+				//dispatchEvent(new DecisionTreeEvent(question, DecisionTreeEvent.QUESTION_SAVE));
+				cancelClick(e);
+			}
+
+			private function addOptionclickHandler(event:MouseEvent):void
+			{
+				//
+
+			}
+
+			public function prepareUI(data: XML): void
+			{
+				question = new XMLListCollection(XMLList(data)..Question)[0];
+				switch(int(question.QuestionType))
+				{
+					case 1: currentState = "RADIO_BUTTON"; break;
+					case 2: currentState = "MULTI_CHOICE"; break;
+					case 3: currentState = "TRUE_FALSE"; break;
+					case 4: currentState = "MATCH_FOLLOWING"; break;
+				}
+				wAAsseetGrp.updateAssetValue(question.WrongAnswerAsset);
+				rAAssetGrp.updateAssetValue(question.RightAnswerAsset);
+				wSAsseetGrp.updateAssetValue(question.WorkSheet);
+				qAsseetGrp.updateAssetValue(question.QuestionAsset);
+				assetGrp.visible = qAsseetGrp.visible || wSAsseetGrp.visible || rAAssetGrp.visible || wAAsseetGrp.visible;
+				assetGrp.includeInLayout = assetGrp.visible;
+				options.dataProvider = new XMLListCollection(question.Options..OptionsDetails);
+				XMLListCollection(options.dataProvider).refresh();
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<parsley:Configure/>
+		<parsley:ContextBuilder>
+			<parsley:RuntimeConfig>
+				<parsley:Instance instance="{qGroup}" id="questionGrpRB"/>
+			</parsley:RuntimeConfig>
+		</parsley:ContextBuilder>
+		<s:RadioButtonGroup id="qGroup"/>
+	</fx:Declarations>
+	<common:states>
+		<s:State name="RADIO_BUTTON"/>
+		<s:State name="MULTI_CHOICE"/>
+		<s:State name="MATCH_FOLLOWING"/>
+		<s:State name="TRUE_FALSE"/>
+	</common:states>
+	<s:HGroup width="100%" gap="5">
+		<s:Label text="{ResourceStrings.QUESTION}"/>
+		<s:RichEditableText id="desc" text="{question.QuestionName.toString()}" width="100%" multiline="true" maxHeight="80"/>
+	</s:HGroup>
+	<s:VGroup width="100%" gap="5" id="assetGrp">
+		<q:AssetGroup id="wAAsseetGrp" questionPrompt="{ResourceStrings.WRONGANSWERASSET}"/>
+		<q:AssetGroup id="rAAssetGrp" questionPrompt="{ResourceStrings.RIGHTANSWERASSET}"/>
+		<q:AssetGroup id="wSAsseetGrp" questionPrompt="{ResourceStrings.WORKSHEET}"/>
+		<q:AssetGroup id="qAsseetGrp" questionPrompt="{ResourceStrings.QUESTIONASSET}"/>
+	</s:VGroup>
+	<s:Button label="{ResourceStrings.ADD_OPTION}" click="addOptionclickHandler(event)" excludeFrom="TRUE_FALSE" includeInLayout="false" visible="false"/>
+	<s:Scroller width="100%" height="100%" minHeight="50">
+		<s:DataGroup id="options" itemRenderer="com.dtree.view.questions.OptionBox" verticalCenter="0" horizontalCenter="0" width="100%" height="100%">
+			<s:layout>
+				<s:VerticalLayout/>
+			</s:layout>
+		</s:DataGroup>
+	</s:Scroller>
+</common:DtreePanel>

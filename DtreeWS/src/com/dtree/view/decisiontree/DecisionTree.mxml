@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:parsley="http://www.spicefactory.org/parsley" xmlns:flextoolbox="http://www.flextoolbox.com/2006/mxml"
+	width="100%" height="100%" initialize="DTreeInit(event)" dragEnter="helper.dragEnterHandler(event);" dragOver="helper.dragOverHandler(event);" dragDrop="helper.dragDropHandler(event);"
+	click="helper.clickHandler(event)" updateComplete="helper.updateCompleteHandler(event)">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import com.custardbelly.as3flobile.controls.viewport.ScrollViewport;
+			import com.dtree.model.presentation.DtreeModuleModel;
+			import com.dtree.model.vo.DTreeData;
+			import com.roguedevelopment.objecthandles.ObjectHandles;
+			import com.roguedevelopment.objecthandles.decorators.DecoratorManager;
+			import mx.events.FlexEvent;
+			import mx.events.PropertyChangeEvent;
+			[Bindable] public var oh: ObjectHandles;
+			private var decoratorManager: DecoratorManager;
+			[Inject] public var helper: DTreeHelper;
+			[Inject] public var canvasHelper: DTreeCanvasHelper;
+			[Bindable] [Inject] public var model: DtreeModuleModel;
+			[Bindable] public var dtreeData: DTreeData;
+			private function DTreeInit(e: FlexEvent): void
+			{
+				oh = OHUtils.getObjectHandle(canvas);
+			}
+			private var viewport: ScrollViewport;
+			/* private function handleContentPropertyChange(e: PropertyChangeEvent):void
+			{
+				if(e.property == "contentWidth" || e.property == "contentHeight")
+				{
+					viewport.refresh();
+				}
+			} */
+			[Init]
+			public function initView(): void
+			{
+				decoratorManager = OHUtils.getDecorationManager(oh, drawingLayer);
+				/* canvas.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, handleContentPropertyChange, false, 0, true);
+				viewport = new ScrollViewport();
+				viewport.width = 3500;
+				viewport.height = 3500;
+				viewport.content = canvas;
+				viewContainer.addElement(viewport); */
+			}
+			public function get dtreeID(): int
+			{
+				return dtreeData != null ? dtreeData.ID : 0;
+			}
+			public function openData(value: DTreeData): void
+			{
+				helper.removeAllDtreeGroups();
+				dtreeData = value;
+				if(dtreeData.xml != null)
+				{
+					canvasHelper.addToCanvas(helper.getDTreeGrpXML());
+				}
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<parsley:ContextBuilder>
+			<parsley:RuntimeConfig>
+				<parsley:Instance instance="{surface}"/>
+				<parsley:Instance instance="{dTreeGroup}" id="dTreeGrpRB"/>
+				<parsley:Instance instance="{oh}"/>
+				<parsley:Instance instance="{canvas}" id="dtreeCanvas"/>
+			</parsley:RuntimeConfig>
+		</parsley:ContextBuilder>
+		<s:RadioButtonGroup id="dTreeGroup"/>
+	</fx:Declarations>
+	<s:SpriteVisualElement width="100%" height="100%" id="drawingLayer" scaleX="{model.scaleFactor}" scaleY="{model.scaleFactor}"/>
+	<s:Scroller width="100%" height="100%">
+		<s:Group width="100%" height="100%" scaleX="{model.scaleFactor}" scaleY="{model.scaleFactor}" id="viewContainer">
+			<s:BorderContainer width="100%" height="100%" id="canvas" minHeight="{OHUtils.MAX_HW}" minWidth="{OHUtils.MAX_HW}" backgroundAlpha="0" keyUp="helper.canvasKeyUpHandler(event)">
+				<s:layout>
+					<s:BasicLayout/>
+				</s:layout>
+				<flextoolbox:WireSurface id="surface" width="100%" height="100%" styleName="myCustomizedWireSurface"/>
+			</s:BorderContainer>
+		</s:Group>
+	</s:Scroller>
+	<fx:Private/>
+</s:Group>

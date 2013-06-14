@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<dt:DTreeGroup xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:core="com.dtree.view.decisiontree.core.*" xmlns:comp="com.dtree.view.comps.*"
+	xmlns:prop="com.dtree.view.decisiontree.hints.*" xmlns:dt="com.dtree.view.decisiontree.*" implements="com.dtree.view.decisiontree.ITAGroup">
+	<fx:Script>
+		<![CDATA[
+			import com.dtree.common.ResourceStrings;
+			import com.dtree.common.Util;
+			import com.dtree.model.vo.QVO;
+			import com.dtree.view.common.AssetLocator;
+			import com.dtree.view.decisiontree.hints.PropBox;
+			import com.flextoolbox.controls.WireJack;
+			import com.roguedevelopment.objecthandles.constraints.SizeConstraint;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			public static const LEN: Number = 22;
+			override protected function getNewSizeConstraint(): SizeConstraint
+			{
+				var result:SizeConstraint = new SizeConstraint();
+				result.minWidth = QVO._WIDTH;
+				result.maxWidth = QVO.MAX_WIDTH;
+				result.minHeight = LEN;
+				result.maxHeight = LEN;
+				return result;
+			}
+			override public function get propertyBox(): PropBox
+			{
+				return propBox;
+			}
+			private function onBtnClick(e: MouseEvent): void
+			{
+				Alert.show(ResourceStrings.DELETE_TA_MESSAGE, ResourceStrings.CONFIRMATION_STR, Alert.YES | Alert.NO, null, closeHandler, AssetLocator.INFO)
+			}
+			private function closeHandler(e:CloseEvent): void
+			{
+				if(e.detail == Alert.YES)
+				{
+					DtreeUtils.removeDtreeGroupBox(this);
+					dtreeModel.terminatingActions.refresh();
+				}
+			}
+			override public function get jack(): WireJack
+			{
+				return taJack;
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:LinearGradient id="hdrClr" rotation="90">
+			<s:entries>
+				<s:GradientEntry color="0x00AAAA" />
+				<s:GradientEntry color="0x008888" />
+				<s:GradientEntry color="0x006666" />
+			</s:entries>
+		</s:LinearGradient>
+	</fx:Declarations>
+	<s:Rect width="100%" height="100%" radiusX="5" radiusY="5" alpha="0.4">
+		<s:filters>
+			<s:DropShadowFilter blurX="20" blurY="20" distance="11" angle="90" knockout="true"  alpha="0.5"/>
+		</s:filters>
+		<s:stroke>
+			<s:SolidColorStroke id="borderStroke" color="0x777777" weight="1"/>
+		</s:stroke>
+		<s:fill>
+			<s:SolidColor color="0x000000"/>
+		</s:fill>
+	</s:Rect>
+	<s:Group width="100%" height="100%">
+		<s:Rect radiusX="0" radiusY="0" width="100%" height="100%" horizontalCenter="0" verticalCenter="0" alpha="0.4" fill="{hdrClr}" stroke="{borderStroke}"/>
+		<s:HGroup width="100%" height="100%" horizontalAlign="center" verticalAlign="middle" paddingBottom="1" paddingLeft="2" paddingRight="1" paddingTop="1" gap="1">
+			<comp:IconButton skinClass="com.dtree.view.comps.skins.DtreeGroupDeleteButtonSkin" width="12" height="13" icon="{AssetLocator.DELETE_NORMAL}" overIcon="{AssetLocator.DELETE_ROLLOVER}"
+				downIcon="{AssetLocator.DELETE_ROLLOVER}" buttonMode="true" click="onBtnClick(event)" toolTip="{ResourceStrings.DELETE}"/>
+			<s:Label id="qText" text="{_xml.TerminatingOptionText}" width="100%" textAlign="justify" maxDisplayedLines="1" showTruncationTip="true" styleName="answerState"/>
+			<core:DTreeOutputJack id="taJack" wireManager="{surface}" mouseDown="Util.killEvent(event); model.isLocked=true" dtreeData="{_xml}" height="15"
+				mouseUp="model.isLocked = false" styleName="myCustomizedJack" toolTip="{ResourceStrings.TA_STR}"/>
+		</s:HGroup>
+		<prop:PropBox id="propBox"/>
+	</s:Group>
+</dt:DTreeGroup>

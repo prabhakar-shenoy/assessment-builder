@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:parsley="http://www.spicefactory.org/parsley" xmlns:cairngorm="http://ns.adobe.com/cairngorm"
+	xmlns:view="com.dtree.view.*" xmlns:q="com.dtree.view.questions.*" xmlns:c="com.dtree.view.common.*" preloader="com.leavethatthingalone.preload.Preloader" keyUp="NavKeyUpHandler(event)" width="100%" height="100%"
+	backgroundAlpha="0">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	<fx:Metadata>
+		[Event(name="NEW_DTREE", type="com.dtree.events.DTreeTabEvent")]
+		[ManagedEvents("NEW_DTREE")]
+	</fx:Metadata>
+	<fx:Style source="assets/styles.css"/>
+	<fx:Script>
+		<![CDATA[
+			import com.dtree.common.ResourceStrings;
+			import com.dtree.common.Util;
+			import com.dtree.config.ApplicationContext;
+			import com.dtree.events.DTreeTabEvent;
+			import com.dtree.events.DecisionTreeEvent;
+			import com.dtree.model.presentation.DtreeModel;
+			import com.dtree.view.common.AssetLocator;
+			import com.dtree.view.Extras;
+			import mx.utils.ObjectProxy;
+			import mx.logging.LogEventLevel;
+			import mx.rpc.soap.LoadEvent;
+			import mx.rpc.soap.WebService;
+			import org.spicefactory.parsley.core.context.Context;
+			import org.spicefactory.parsley.core.messaging.ErrorPolicy;
+			private function contextbuilderErrorHandler(e: ErrorEvent): void
+			{
+				trace(e.text);
+			}
+			[Bindable] [Inject(id="flashvars")] public var flashvars: ObjectProxy;
+			[Inject] [Bindable] public var context: Context;
+			[Inject] [Bindable] public var dtreeModel: DtreeModel;
+			[Inject] public var webService: WebService;
+			[Bindable] private var canToolBarOpen: Boolean = false;
+			[Init]
+			public function initView(): void
+			{
+				flashvars = new ObjectProxy(parameters);
+				dtreeModel.updateEnabled(false);
+				webService.wsdl = ConfigConsts.getWSDLURL(dtreeModel);
+				webService.addEventListener(LoadEvent.LOAD, wsLoaded);
+				webService.loadWSDL();
+				canToolBarOpen = true;
+			}
+			private function wsLoaded(e: LoadEvent): void
+			{
+				dtreeModel..updateEnabled(true);
+			}
+			[Command(selector="OPEN_QUESTION")]
+			public function handleQuestionEdit(e: DecisionTreeEvent): void
+			{
+				questionBoxPopUp.open = true;
+				QuestionDialogBox(questionBoxPopUp.popup.getInstance()).prepareUI(e.data);
+				dtreeModel.updateEnabled(true);
+			}
+			[Command(selector="OPEN_DECISIONTREE")]
+			public function openDecisionTreeData(e: DecisionTreeEvent): void
+			{
+				dispatchEvent(new DTreeTabEvent(e.data, DTreeTabEvent.NEW_DTREE));
+			}
+			[Command(selector="INTELLI_STATS")]
+			public function intelliStatsHandler(e: DecisionTreeEvent): void
+			{
+				Extras.intellistats(e.data);
+			}
+			private function logoLoadcompleteHandler(e: Event): void
+			{
+				Util.smoothen(logo.bitmapData);
+			}
+			private function NavKeyUpHandler(e: KeyboardEvent):void
+			{
+				if(e.ctrlKey && e.shiftKey && e.keyCode == Keyboard.F4 && nav.selectedIndex != -1)
+				{
+					nav.tabCloseWith(nav.selectedIndex);
+				}
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<parsley:ContextBuilder error="contextbuilderErrorHandler(event)" description="Assessment Tree Application">
+			<cairngorm:CairngormModuleSupport />
+			<parsley:ViewSettings autowireComponents="true"/>
+			<parsley:MessageSettings unhandledErrors="{ErrorPolicy.IGNORE}"/>
+			<parsley:FlexConfig type="{ApplicationContext}"/>
+			<parsley:RuntimeConfig>
+				<parsley:Instance instance="{inputBoxPopUp}" id="inputBox"/>
+				<parsley:Instance instance="{assetViewerPopUp}" id="assetView"/>
+				<parsley:Instance instance="{nav}" id="tabNav"/>
+			</parsley:RuntimeConfig>
+		</parsley:ContextBuilder>
+		<parsley:Configure/>
+		<cairngorm:PopUpWrapper parent="{this}" modal="false" center="false" open="{canToolBarOpen}">
+			<view:DescriptionList currentState="questionList"/>
+			<cairngorm:behaviors>
+				<cairngorm:AddPopUpToParsleyContext context="{context}"/>
+				<cairngorm:ZoomAndFadeBehavior/>
+			</cairngorm:behaviors>
+		</cairngorm:PopUpWrapper>
+		<cairngorm:PopUpWrapper parent="{this}" modal="false" center="false" open="{canToolBarOpen}">
+			<view:MainToolBar/>
+			<cairngorm:behaviors>
+				<cairngorm:AddPopUpToParsleyContext context="{context}"/>
+				<cairngorm:ZoomAndFadeBehavior/>
+			</cairngorm:behaviors>
+		</cairngorm:PopUpWrapper>
+		<cairngorm:PopUpWrapper id="questionBoxPopUp" parent="{this}" modal="true" center="true">
+			<q:QuestionDialogBox popupWrapper="{questionBoxPopUp}" title="{ResourceStrings.EDIT_QUESTION}"/>
+			<cairngorm:behaviors>
+				<cairngorm:AddPopUpToParsleyContext context="{context}"/>
+				<cairngorm:ZoomAndFadeBehavior/>
+			</cairngorm:behaviors>
+		</cairngorm:PopUpWrapper>
+		<cairngorm:PopUpWrapper id="inputBoxPopUp" parent="{this}" modal="true" center="true">
+			<c:InputBox popupWrapper="{inputBoxPopUp}" title="{ResourceStrings.ASSESSMENT_NAME}"/>
+			<cairngorm:behaviors>
+				<cairngorm:AddPopUpToParsleyContext context="{context}"/>
+				<cairngorm:ZoomAndFadeBehavior/>
+			</cairngorm:behaviors>
+		</cairngorm:PopUpWrapper>
+		<cairngorm:PopUpWrapper id="assetViewerPopUp" parent="{this}" modal="true" center="true">
+			<q:AssetViewer/>
+			<cairngorm:behaviors>
+				<cairngorm:AddPopUpToParsleyContext context="{context}"/>
+				<cairngorm:ZoomAndFadeBehavior/>
+			</cairngorm:behaviors>
+		</cairngorm:PopUpWrapper>
+		<s:TraceTarget includeCategory="true" includeLevel="true" includeTime="true" level="{LogEventLevel.DEBUG}">
+			<s:filters>
+				<fx:String>com.adobe.cairngorm.*</fx:String>
+				<fx:String>org.spicefactory.*</fx:String>
+			</s:filters>
+		</s:TraceTarget>
+	</fx:Declarations>
+	<s:BitmapImage id="logo" source="{AssetLocator.LOGO}" width="100%" height="100%" alpha=".15" smooth="true" scaleMode="letterbox" ready="logoLoadcompleteHandler(event)"/>
+	<view:DTreeTabNavigator width="100%" height="100%" id="nav"/>
+</s:Application>

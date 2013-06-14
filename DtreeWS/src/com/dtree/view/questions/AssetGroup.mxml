@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:parsley="http://www.spicefactory.org/parsley" width="100%" gap="5">
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.popup.PopUpWrapper;
+			import com.dtree.model.presentation.DtreeModel;
+			[Bindable] public var questionPrompt: String;
+			[Bindable] private var questionAsset: String;
+			
+			private static const IMAGE: int = 1;
+			private static const MOVIE: int = 2;
+
+			private var assetState: int = -1;
+			private var asseturl: String;
+			public function updateAssetValue(value: String): void
+			{
+				assetState = -1;
+				asseturl = value;
+				var ar: Array;
+				if(value != "" && value != null)
+				{
+					ar = value.split("/");
+					if(ar.length > 0)
+					{
+						value = ar[ar.length - 1];
+					}
+				}
+				questionAsset = value;
+				visible = questionAsset != "" && questionAsset != null;
+				includeInLayout = visible;
+				if(visible)
+				{
+					ar = value.split(".");
+					if(ar.length > 0)
+					{
+						switch(String(ar[ar.length -1]).toLowerCase())
+						{
+							case 'jpg':
+							case 'png': assetState = IMAGE; break;
+							//case 'avi':
+							case 'mp3':
+							case 'mp4':
+							case 'flv': assetState = MOVIE; break;
+						}
+					}
+					if(assetState != -1)
+					{
+						assetLink.styleName = "assetLinkStyle";
+						assetLink.buttonMode = true;
+						assetLink.addEventListener(MouseEvent.CLICK, openAssetLink);
+					}
+					else
+					{
+						assetLink.styleName = "assetStyle";
+					}
+				}
+			}
+
+			[Inject]
+			public var model: DtreeModel;
+
+			[Inject(id="assetView")]
+			public var assetView: PopUpWrapper;
+
+			private function openAssetLink(e: MouseEvent): void
+			{
+				var url: String = model.rootHost+asseturl;
+				assetView.open = true;
+				var assetViewState: String = "";
+				switch(assetState)
+				{
+					case IMAGE: assetViewState = "IMAGE"; break;
+					case MOVIE: assetViewState = "VIDEO"; break;
+						
+				}
+				AssetViewer(assetView.popup.getInstance()).prepareUI(url, assetViewState, questionPrompt, questionAsset);
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<parsley:Configure/>
+	</fx:Declarations>
+	<s:Label text="{questionPrompt}"/>
+	<s:Label text="{questionAsset}" width="100%" id="assetLink"/>
+</s:HGroup>

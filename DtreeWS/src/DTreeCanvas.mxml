@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<dt:TreeModule xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:parsley="http://www.spicefactory.org/parsley" xmlns:dt="com.dtree.view.decisiontree.*"
+	width="100%" height="100%" backgroundAlpha="0" implements="com.adobe.cairngorm.module.IParsleyModule, com.dtree.view.decisiontree.ITreeCanvas">
+	<fx:Metadata>
+		[Event(name="MODULE_LOADED", type="com.dtree.events.DTreeTabEvent")]
+		[ManagedEvents("MODULE_LOADED")]
+	</fx:Metadata>
+	<fx:Declarations>
+		<parsley:ContextBuilder id="contextBuilderTag" config="{DTreeCanvasContext}" description="Decision Tree Canvas" error="contextbuilderErrorHandler(event)">
+			<parsley:ViewSettings autowireComponents="true"/>
+			<parsley:MessageSettings unhandledErrors="{ErrorPolicy.IGNORE}"/>
+			<parsley:RuntimeConfig>
+				<parsley:Instance instance="{tree}"/>
+			</parsley:RuntimeConfig>
+		</parsley:ContextBuilder>
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.dtree.common.Util;
+			import com.dtree.config.DTreeCanvasContext;
+			import com.dtree.events.DTreeTabEvent;
+			import com.dtree.events.DecisionTreeEvent;
+			import com.dtree.model.presentation.DtreeModuleModel;
+			import com.dtree.model.vo.DTreeData;
+			import com.dtree.view.decisiontree.DTreeCanvasHelper;
+			import com.dtree.view.decisiontree.DTreeGlobals;
+			import com.dtree.view.decisiontree.DTreeGroup;
+			import com.dtree.view.decisiontree.DTreeHelper;
+			import com.dtree.view.decisiontree.QuestionGroup;
+			import mx.utils.ObjectProxy;
+			import spark.components.BorderContainer;
+			import org.spicefactory.parsley.core.messaging.ErrorPolicy;
+			public function get contextBuilder(): ContextBuilderTag
+			{
+				return contextBuilderTag;
+			}
+			private function contextbuilderErrorHandler(e: ErrorEvent): void
+			{
+				trace(e.text);
+			}
+			public function get canvas(): BorderContainer
+			{
+				return tree.canvas;
+			}
+			private static const STARTING_QUESTION_CHANGE: int = 1;
+			private static const UPDATE_RANGE: int = 2;
+			private function performOp(op: int): void
+			{
+				for(var i: int = 0; i < canvas.numElements; i++)
+				{
+					var qg: QuestionGroup = canvas.getElementAt(i) as QuestionGroup;
+					if(qg != null && qg.xml != null)
+					{
+						switch(op)
+						{
+							case STARTING_QUESTION_CHANGE: qg.startingQStatusChange(); break;
+							case UPDATE_RANGE: qg.updateRange(); break;
+						}
+					}
+				}
+			}
+			[Inject] public var helper: DTreeHelper;
+			[Inject] public var canvasHelper: DTreeCanvasHelper;
+			[Inject] public var _model: DtreeModuleModel;
+			public function get model(): DtreeModuleModel
+			{
+				return _model;
+			}
+			public function updateRange(): void
+			{
+				if(model.isRandom)
+				{
+					performOp(UPDATE_RANGE);
+				}
+			}
+			[Init]
+			public function initView(): void
+			{
+				helper.treeCanvas = this;
+				dispatchModuleLoadedEvent()
+			}
+			[Command(selector="DTREE_TYPE_CHANGE")]
+			public function updateLevelQs(e: DTreeTabEvent): void 
+			{
+				if(e.data == this)
+				{
+					//trace(e.type, e.data);
+					helper.removeAllDtreeGroups(true);
+				}
+			}
+			public function hasDTreeItems(): Boolean
+			{
+				var result: Boolean = false;
+				for(var i: int = 0; i < canvas.numElements; i++)
+				{
+					var grp: DTreeGroup = canvas.getElementAt(i) as DTreeGroup;
+					result = grp != null;
+					if(result)
+					{
+						break;
+					}
+				}
+				return result;
+			}
+			private function _save(mode: Boolean, id: *): void
+			{
+				helper.sa = mode;
+				helper.save_doc(id);
+			}
+			public function save(): void
+			{
+				_save(false, tree.dtreeID);
+			}
+			public function saveAs(): void
+			{
+				_save(true, 0);
+			}
+			public function mergeWith(value: *): void
+			{
+				if(value != null)
+				{
+					Util.execWithBusyCursor(function ():void { canvasHelper.addToCanvas(DTreeGlobals.getxmLList(value), value.overrideProperties, value.pt); });
+				}
+				else
+				{
+					canvasHelper.modelRefresh();
+				}
+			}
+			override public function openDecisionTreeData(value: DTreeData): void
+			{
+				canvasHelper.openDecisionTreeData(value);
+			}
+			[Command(selector="STARTING_QUESTION_CHANGE")]
+			public function startingQStatusChange(e: DecisionTreeEvent): void
+			{
+				performOp(STARTING_QUESTION_CHANGE);
+			}
+		]]>
+	</fx:Script>
+	<dt:DecisionTree id="tree" width="100%" height="100%"/>
+</dt:TreeModule>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<containers:CollapsiblePanel xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/mx"
+	xmlns:containers="com.iwobanas.containers.*" move="dtreeMoveHandler(event)" mouseMove="dtreeMoveHandler(event)" mouseUp="dtreeMoveHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			private function dtreeMoveHandler(event:Event):void
+			{
+				WindowMoveUtil.winMoveHandler(this);
+			}
+		]]>
+	</fx:Script>
+	<containers:layout>
+		<s:VerticalLayout/>
+	</containers:layout>
+</containers:CollapsiblePanel>

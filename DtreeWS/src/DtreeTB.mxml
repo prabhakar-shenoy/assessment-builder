@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<dt:TreeModule xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:parsley="http://www.spicefactory.org/parsley" xmlns:dt="com.dtree.view.decisiontree.*"
+	implements="com.adobe.cairngorm.module.IParsleyModule, com.dtree.view.decisiontree.ILevels" width="100%" height="100%">
+	<fx:Metadata>
+		[Event(name="MODULE_LOADED", type="com.dtree.events.DTreeTabEvent")]
+		[ManagedEvents("MODULE_LOADED")]
+	</fx:Metadata>
+	<fx:Declarations>
+		<parsley:ContextBuilder id="contextBuilderTag" config="{DtreeCanvasTBContext}" description="Decision Tree ToolBar" error="contextbuilderErrorHandler(event)">
+			<parsley:ViewSettings autowireComponents="true"/>
+			<parsley:MessageSettings unhandledErrors="{ErrorPolicy.IGNORE}"/>
+		</parsley:ContextBuilder>
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.dtree.common.ResourceStrings;
+			import com.dtree.config.DtreeCanvasTBContext;
+			import com.dtree.events.DTreeTabEvent;
+			import com.dtree.model.presentation.DtreeModel;
+			import com.dtree.model.vo.DTreeData;
+			
+			import org.spicefactory.parsley.core.messaging.ErrorPolicy;
+			public function get contextBuilder(): ContextBuilderTag
+			{
+				return contextBuilderTag;
+			}
+			private function contextbuilderErrorHandler(e: ErrorEvent): void
+			{
+				trace(e.text);
+			}
+			[Bindable] private var _minLevel: Number;
+			[Bindable] private var _maxLevel: Number;
+			public function get minLevel(): Number
+			{
+				return _minLevel;
+			}
+			public function get maxLevel(): Number
+			{
+				return _maxLevel;
+			}
+			[Inject] public var dtreeModel: DtreeModel;
+			private function updateQ(): void
+			{
+				dtreeModel.randomQuestionLevels.refresh();
+				if(host != null && host.treeCanvas != null)
+				{
+					host.treeCanvas.updateRange();
+				}
+			}
+			[Command(selector="DTREE_TYPE_CHANGE")]
+			public function updateLevelQs(e: DTreeTabEvent): void 
+			{
+				if(e.data.isRandom)
+				{
+					updateQ();
+				}
+			}
+			public function set minLevel(value: Number): void
+			{
+				_minLevel = value;
+				updateQ();
+			}
+			public function set maxLevel(value: Number): void
+			{
+				_maxLevel = value;
+				updateQ();
+			}
+			private function minLevelchangeHandler(e: Event): void
+			{
+				minLevel = minLvl.value;
+			}
+			private function maxLevelchangeHandler(e: Event): void
+			{
+				maxLevel = maxLvl.value;
+			}
+			[Init]
+			public function intiView(): void
+			{
+				_minLevel = 1;
+				_maxLevel = 10;
+				updateQ();
+				dispatchModuleLoadedEvent()
+			}
+			override public function openDecisionTreeData(value: DTreeData): void
+			{
+				_minLevel = value.xml.@minimumLevel;
+				_maxLevel = value.xml.@maximumLevel;
+				updateQ();
+			}
+		]]>
+	</fx:Script>
+	<dt:layout>
+		<s:HorizontalLayout horizontalAlign="left" verticalAlign="middle" paddingBottom="1" paddingRight="1" paddingTop="1" paddingLeft="1" gap="3"/>
+	</dt:layout>
+	<s:Label text="{ResourceStrings.MIN_LVL_STRING}"/>
+	<s:NumericStepper id="minLvl" value="{_minLevel}" minimum="1" maximum="{_maxLevel}" whiteSpaceCollapse="collapse" width="50" change="minLevelchangeHandler(event)"/>
+	<s:Label text="{ResourceStrings.MAX_LVL_STRING}"/>
+	<s:NumericStepper id="maxLvl" value="{_maxLevel}" minimum="{_minLevel}" whiteSpaceCollapse="collapse" width="50" change="maxLevelchangeHandler(event)" maximum="1000"/>
+</dt:TreeModule>

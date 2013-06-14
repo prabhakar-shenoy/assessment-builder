@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:parsley="http://www.spicefactory.org/parsley" width="100%" height="100%" gap="1">
+	<fx:Declarations>
+		<parsley:Configure/>
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			[Bindable] public var p: String = "Prompt";
+			[Bindable] public var v: String = "Value";
+		]]>
+	</fx:Script>
+	<s:Label text="{p}" color="0xCFCFCF" minWidth="25"/>
+	<s:Label text="{v}" color="0xF1F1F1" minWidth="27" textAlign="right"/>
+</s:HGroup>

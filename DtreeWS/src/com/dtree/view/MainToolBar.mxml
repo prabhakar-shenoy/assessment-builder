@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<common:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:parsley="http://www.spicefactory.org/parsley" xmlns:common="com.dtree.view.common.*" 
+	xmlns:comp="com.dtree.view.comps.*" title="{ResourceStrings.TOOLBAR_STR}" skinClass="com.dtree.view.comps.skins.MyTitleWindowSkin" creationComplete="closeButton.visible = false" minHeight="20" minWidth="70" y="100" x="605">
+	<fx:Declarations>
+		<parsley:Configure/>
+	</fx:Declarations>
+	<fx:Metadata>
+		[Event(name="NEW_DTREE", type="com.dtree.events.DTreeTabEvent")]
+		[Event(name="SAVE_DTREE", type="com.dtree.events.DTreeTabEvent")]
+		[Event(name="SAVEAS_DTREE", type="com.dtree.events.DTreeTabEvent")]
+		[ManagedEvents("NEW_DTREE, SAVE_DTREE, SAVEAS_DTREE")]
+	</fx:Metadata>
+	<fx:Script>
+		<![CDATA[
+			import com.dtree.common.ResourceStrings;
+			import com.dtree.events.DTreeTabEvent;
+			import com.dtree.model.presentation.DtreeModel;
+			import com.dtree.model.presentation.DtreeModuleModel;
+			import com.dtree.view.common.AssetLocator;
+			[Bindable] [Inject] public var dtreeModel: DtreeModel;
+			[Init]
+			public function initView(): void
+			{
+				dtreeModel.tBar = this;
+			}
+			private function saveClick(e: MouseEvent): void
+			{
+				dispatchEvent(new DTreeTabEvent(null, DTreeTabEvent.SAVE_DTREE));
+			}
+			private function saveAsClick(e: MouseEvent): void
+			{
+				dispatchEvent(new DTreeTabEvent(null, DTreeTabEvent.SAVEAS_DTREE));
+			}
+			private function newClick(e: MouseEvent): void
+			{
+				dispatchEvent(new DTreeTabEvent(null, DTreeTabEvent.NEW_DTREE));
+			}
+			[Bindable] public var model: DtreeModuleModel;
+			private function zoomChangeHandler(e: Event):void
+			{
+				if(model != null)
+				{
+					model.scaleFactor = zoomSlider.value;
+				}
+			}
+		]]>
+	</fx:Script>
+	<common:layout><s:HorizontalLayout gap="1" paddingBottom="1" paddingLeft="1" paddingRight="1" paddingTop="1" horizontalAlign="center" verticalAlign="middle"/></common:layout>
+	<comp:IconButton skinClass="com.dtree.view.comps.skins.IconButtonSkin" label="{ResourceStrings.NEW}" click="newClick(event)" enabled="{dtreeModel.enabled}" buttonMode="true"
+					 icon="{AssetLocator.NEW_NORMAL}" overIcon="{AssetLocator.NEW_ROLLOVER}" downIcon="{AssetLocator.NEW_DOWN}" disabledIcon="{AssetLocator.NEW_DISABLE}"
+					 includeInLayout="{dtreeModel.addNewFlag}" visible="{dtreeModel.addNewFlag}"/>
+	<s:Image source="{AssetLocator.SEPERATOR}" includeInLayout="{dtreeModel.addNewFlag}" visible="{dtreeModel.addNewFlag}"/>
+	<comp:IconButton skinClass="com.dtree.view.comps.skins.IconButtonSkin" label="{ResourceStrings.SAVE}" click="saveClick(event)" enabled="{dtreeModel.saveEnabled}" buttonMode="true"
+					 icon="{AssetLocator.SAVE_NORMAL}" overIcon="{AssetLocator.SAVE_ROLLOVER}" downIcon="{AssetLocator.SAVE_DOWN}" disabledIcon="{AssetLocator.SAVE_DISABLE}"/>
+	<s:Image source="{AssetLocator.SEPERATOR}"/>
+	<comp:IconButton skinClass="com.dtree.view.comps.skins.IconButtonSkin" label="{ResourceStrings.SAVEAS}" click="saveAsClick(event)" enabled="{dtreeModel.saveEnabled}" buttonMode="true"
+					 icon="{AssetLocator.SAVEAS_NORMAL}" overIcon="{AssetLocator.SAVEAS_ROLLOVER}" downIcon="{AssetLocator.SAVEAS_DOWN}" disabledIcon="{AssetLocator.SAVEAS_DISABLE}"
+					 includeInLayout="{dtreeModel.addNewFlag}" visible="{dtreeModel.addNewFlag}"/>
+	<s:Image source="{AssetLocator.SEPERATOR}" includeInLayout="{dtreeModel.addNewFlag}" visible="{dtreeModel.addNewFlag}"/>
+	<s:VGroup gap="0" horizontalAlign="center">
+		<s:Label text="{ResourceStrings.ZOOM}"/>
+		<s:HSlider id="zoomSlider" value="1" maxWidth="60" maximum="4" minimum="0.1" change="zoomChangeHandler(event)" stepSize="0.05" toolTip="{zoomSlider.value}" buttonMode="true"/>
+	</s:VGroup>
+</common:TitleWindow>

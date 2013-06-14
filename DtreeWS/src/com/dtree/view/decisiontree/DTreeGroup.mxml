@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/mx"
+	xmlns:parsley="http://www.spicefactory.org/parsley" xmlns:core="com.dtree.view.decisiontree.ctls.core.*" implements="com.dtree.view.decisiontree.IDTreeGroup"
+	x="{model.x}" y="{model.y}" width="{model.width}" height="{model.height}" mouseDown="mouseDownHandler(event)" mouseUp="mouseUpHandler(event)" initialize="init(event)" xmlns:core1="com.dtree.view.decisiontree.core.*">
+	<fx:Declarations>
+		<parsley:Configure/>
+		<parsley:ContextBuilder>
+			<parsley:RuntimeConfig>
+				<parsley:Instance instance="{model}"/>
+			</parsley:RuntimeConfig>
+		</parsley:ContextBuilder>
+		<core1:SimpleDataModel id="model"/>
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.dtree.model.presentation.DtreeModel;
+			import com.dtree.model.vo.QVO;
+			import com.dtree.view.decisiontree.hints.PropBox;
+			import com.flextoolbox.controls.WireJack;
+			import com.flextoolbox.controls.WireSurface;
+			import com.roguedevelopment.objecthandles.HandleDefinitions;
+			import com.roguedevelopment.objecthandles.ObjectHandles;
+			import com.roguedevelopment.objecthandles.constraints.SizeConstraint;
+			import spark.components.BorderContainer;
+			private function init(e: Event): void
+			{
+				var condition:CSSCondition = new CSSCondition(CSSConditionKind.PSEUDO, "upAndSelected");
+				var selector:CSSSelector = new CSSSelector("spark.components.ToggleButton", [condition]);
+				var theStyle:CSSStyleDeclaration = new CSSStyleDeclaration(selector);
+				theStyle.setStyle("chromeColor", "haloOrange");
+			}
+			[Inject] [Bindable] public var oh: ObjectHandles;
+			[Inject] [Bindable] public var surface: WireSurface;
+			[Inject] public var dtreeModel: DtreeModel;
+			protected function getNewSizeConstraint(): SizeConstraint
+			{
+				var result: SizeConstraint = new SizeConstraint();
+				result.minWidth = QVO._WIDTH;
+				result.maxWidth = QVO.MAX_WIDTH;
+				result.minHeight = QVO._HEIGHT;
+				result.maxHeight = QVO.MAX_HEIGHT;
+				return result;
+			}
+			[Init]
+			public function initView(): void
+			{
+				//oh.addDefaultConstraint( constraint );
+				oh.registerComponent(model, this, HandleDefinitions.NO_ROTATE_DEFINITION, true, [getNewSizeConstraint()]);
+			}
+			public function exitView(): void
+			{
+				oh.unregisterModel(model);
+			}
+			public function get jack(): WireJack
+			{
+				return null;
+			}
+			public function get propertyBox(): PropBox
+			{
+				return null;
+			}
+			protected function updateInternal(): void
+			{
+			}
+			public function setModel(canvas: BorderContainer, vo: QVO): void
+			{
+				model.width = vo.width;
+				model.height= vo.height;
+				model.x = vo.pt.x;
+				model.y = vo.pt.y;
+				updateInternal();
+				model = model;
+				if(canvas != null)
+				{
+					try
+					{
+						canvas.addElement(this);
+					}
+					catch(e:Error)
+					{}
+				}
+			}
+			private function mouseDownHandler(e: MouseEvent): void
+			{
+				model.isLocked = false;
+				var box: PropBox = propertyBox;
+				if(box != null)
+				{
+					box.x = e.localX + 10;
+					box.y = e.localY + 10;
+					box.visible = true;
+				}
+			}
+			private function mouseUpHandler(e: MouseEvent): void
+			{
+				var box: PropBox = propertyBox;
+				if(box != null)
+				{
+					box.visible = false;
+				}
+			}
+			[Bindable] protected var _xml: XML;
+			public function get xml(): XML
+			{
+				return _xml;
+			}
+			public function set xml(value: XML): void
+			{
+				_xml = value;
+			}
+		]]>
+	</fx:Script>
+</s:Group>

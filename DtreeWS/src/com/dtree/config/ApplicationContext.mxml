@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<parsley:Objects xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:parsley="http://www.spicefactory.org/parsley" xmlns:cairngorm="http://ns.adobe.com/cairngorm">
+	<fx:Script>
+		<![CDATA[
+			import com.dtree.delegates.DTreeDelegate;
+			import com.dtree.delegates.DecisionTreeDelegate;
+			import com.dtree.model.presentation.DtreeModel;
+			import mx.rpc.soap.mxml.WebService;
+			import org.spicefactory.lib.reflect.ClassInfo;
+			import mx.utils.ObjectProxy;
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<cairngorm:ParsleyModuleDescriptor objectId="dTreeCanvas" applicationDomain="{ClassInfo.currentDomain}" url="DTreeCanvas.swf"/>
+		<cairngorm:ParsleyModuleDescriptor objectId="dTreeCanvasTB" applicationDomain="{ClassInfo.currentDomain}" url="DTreeTB.swf"/>
+		<parsley:Object id="webService" type="{WebService}">
+			<parsley:Property name="showBusyCursor" value="{true}"/>
+		</parsley:Object>
+		<parsley:Object type="{DtreeModel}"/>
+		<parsley:Object type="{DTreeDelegate}">
+			<parsley:MessageHandler selector="NEW_DTREE" method="execute"/>
+		</parsley:Object>
+		<parsley:Object type="{DecisionTreeDelegate}">
+			<parsley:ConstructorArgs>
+				<parsley:ObjectRef idRef="webService"/>
+			</parsley:ConstructorArgs>
+			<parsley:ManagedEvents names="['OPEN_DECISIONTREE', 'LISTCHANGE_DECISIONTREE', 'REFRESH_CATEGORY_LIST', 'OPEN_QUESTION', 'REFRESH_LIST']"/>
+			<parsley:MessageHandler selector="QUESTION_LIST" method="handlerQuestionList"/>
+			<parsley:MessageHandler selector="DECISIONTREE_LIST" method="handlerDecisionList"/>
+			<parsley:MessageHandler selector="TERMINATINGACTION_LIST" method="handlerTerminationActionList"/>
+			<parsley:MessageHandler selector="CATEGORY_LIST" method="handleCategoryList"/>
+			<parsley:MessageHandler selector="UPDATE_DECISIONTREE" method="saveDecisionTree"/>
+			<parsley:MessageHandler selector="EDIT_DECISIONTREE" method="editDecisionTree"/>
+			<parsley:MessageHandler selector="QUESTION_EDIT" method="editQuestionFor"/>
+			<parsley:MessageHandler selector="QUESTION_SAVE" method="saveQuestionFor"/>
+			<parsley:MessageHandler selector="MERGE_DTREE" method="editDecisionTree"/>
+		</parsley:Object>
+		<parsley:Object id="flashvars" type="{ObjectProxy}"/>
+	</fx:Declarations>
+</parsley:Objects>

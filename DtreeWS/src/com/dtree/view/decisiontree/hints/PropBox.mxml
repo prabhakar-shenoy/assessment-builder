@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:parsley="http://www.spicefactory.org/parsley" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:hints="com.dtree.view.decisiontree.hints.*"
+	borderColor="0xBDBDBD" borderVisible="true" borderWeight="2" visible="false" includeInLayout="false" cornerRadius="10">
+	<fx:Declarations>
+		<parsley:Configure/>
+		<s:LinearGradient id="bgClr" rotation="90">
+			<s:entries>
+				<s:GradientEntry color="0x000000"/>
+				<s:GradientEntry color="0x222222"/>
+				<s:GradientEntry color="0x444444"/>
+			</s:entries>
+		</s:LinearGradient>
+	</fx:Declarations>
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	<s:Rect width="100%" height="100%" radiusX="5" radiusY="5" alpha="0.4">
+		<s:filters>
+			<s:DropShadowFilter blurX="20" blurY="20" distance="11" angle="90" knockout="true" alpha="0.5"/>
+		</s:filters>
+		<s:fill>
+			<s:SolidColor color="0x000000"/>
+		</s:fill>
+	</s:Rect>
+	<s:Rect width="100%" height="100%" radiusX="5" radiusY="5" alpha="0.4" fill="{bgClr}">
+		<s:stroke>
+			<s:SolidColorStroke color="0x777777" weight="1"/>
+		</s:stroke>
+	</s:Rect>
+	<s:VGroup width="100%" height="100%" gap="1" styleName="hintBox" paddingBottom="5" paddingLeft="5" paddingRight="5" paddingTop="5">
+		<hints:HintLineBox currentState="{HintLineBox.XY_STATE}"/>
+		<hints:HintLineBox currentState="{HintLineBox.HW_STATE}"/>
+	</s:VGroup>
+</s:BorderContainer>

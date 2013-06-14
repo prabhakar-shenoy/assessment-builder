@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tx:TabNavigator xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:tx="http://tx.teotigraphix.org/flex4" width="100%" height="100%" closePolicy="{TabClosePolicy.ON}"
+	tabClose="tabCloseHandler(event)" tabChildren="true" change="changeHandler(event)">
+	<fx:Metadata>
+		[Event(name="REFRESH_DESCRIPTION_LIST", type="com.dtree.events.DTreeTabEvent")]
+		[ManagedEvents("REFRESH_DESCRIPTION_LIST")]
+	</fx:Metadata>
+	<fx:Script>
+		<![CDATA[
+			import com.dtree.common.ResourceStrings;
+			import com.dtree.events.DTreeTabEvent;
+			import com.dtree.model.presentation.DtreeModel;
+			import com.dtree.view.common.AssetLocator;
+			import com.dtree.view.decisiontree.ILevels;
+			import com.dtree.view.decisiontree.ITreeCanvas;
+			import com.dtree.view.decisiontree.ITreeModule;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import org.teotigraphix.ui.core.TabClosePolicy;
+			import org.teotigraphix.ui.events.TabEvent;
+			import spark.events.IndexChangeEvent;
+			private function refreshDescriptionList(): void
+			{
+				dispatchEvent(new DTreeTabEvent(this, DTreeTabEvent.REFRESH_DESCRIPTION_LIST));
+			}
+			private function closeDtreeTab(index: int): void
+			{
+				removeElementAt(index);
+				dtreeModel.refreshCollection();
+				refreshDescriptionList();
+			}
+			public function tabCloseWith(index: int): void
+			{
+				var canvas: ITreeCanvas = getTabModule(index) as ITreeCanvas;
+				if(canvas != null)
+				{
+					if(canvas.hasDTreeItems())
+					{
+						Alert.show(ResourceStrings.CLOSEDTREE_MESSAGE, ResourceStrings.CONFIRMATION_STR, Alert.YES | Alert.NO, null,
+							function (e: CloseEvent): void
+							{
+								if(e.detail == Alert.YES)
+								{
+									closeDtreeTab(index);
+								}
+							}, AssetLocator.INFO);
+					}
+					else
+					{
+						closeDtreeTab(index);
+					}
+				}
+			}
+			private function tabCloseHandler(e: TabEvent): void
+			{
+				tabCloseWith(e.index);
+			}
+			[Inject] public var dtreeModel: DtreeModel;
+			[Init]
+			public function initView(): void
+			{
+				var cvas: ITreeCanvas = currentTreeCanvas;
+				var tBar: MainToolBar = dtreeModel.tBar;
+				if(tBar != null)
+				{
+					tBar.model = cvas != null ? cvas.model : null;
+					var lFlag: Boolean = tBar.model != null;
+					tBar.zoomSlider.enabled = lFlag;
+					tBar.zoomSlider.value = lFlag ? tBar.model.scaleFactor : 1;
+				}
+			}
+			private function changeHandler(e: IndexChangeEvent): void
+			{
+				dtreeModel.refreshCollection();
+				initView();
+				refreshDescriptionList();
+			}
+			private function getTabModule(index: int, flag: Boolean = true): ITreeModule
+			{
+				var result: ITreeModule = null;
+				if(index != -1)
+				{
+					var host: IHost = IHost(getElementAt(index));
+					if(host != null)
+					{
+						result = flag ? host.treeCanvas : host.levels;
+					}
+				}
+				return result;
+			}
+			public function get currentTreeCanvas(): ITreeCanvas
+			{
+				return getTabModule(selectedIndex, true) as ITreeCanvas;
+			}
+			public function get currentLevels(): ILevels
+			{
+				return getTabModule(selectedIndex, false) as ILevels;
+			}
+			public function indexOfTab(dtreeID: int): int
+			{
+				var result: int = -1;
+				for(var i: int = 0; i < numElements; i++)
+				{
+					var tab: DTreeTabContent = DTreeTabContent(getElementAt(i))
+					if(tab != null && tab.dtreeData != null && dtreeID == tab.dtreeData.ID)
+					{
+						result = i;
+						break;
+					}
+				}
+				return result;
+			}
+			private function save(mode: int = 0): void
+			{
+				var cvas: ITreeCanvas = currentTreeCanvas;
+				if(cvas != null)
+				{
+					switch(mode)
+					{
+						case 0: cvas.save(); break;
+						default: cvas.saveAs();
+					}
+				}
+			}
+			[Command(selector="SAVE_DTREE")]
+			public function saveDtree(e: DTreeTabEvent): void
+			{
+				save(0);
+			}
+			[Command(selector="SAVEAS_DTREE")]
+			public function saveAsDtree(e: DTreeTabEvent): void
+			{
+				save(1);
+			}
+			private function checkModule(module: ITreeModule, element: ITreeModule, tab: DTreeTabContent): Boolean
+			{
+				var result: Boolean = false;
+				if(module != null && element == module)
+				{
+					if(module is ITreeCanvas)
+					{
+						tab.isRandom = tab.dtreeData.xml.@isRandom == 1;
+					}
+					callLater(function(): void { module.openDecisionTreeData(tab.dtreeData); });
+				}
+				return result;
+			}
+			[Command(selector="MODULE_LOADED")]
+			public function moduleLoaded(e: DTreeTabEvent):void
+			{
+				var element: ITreeModule = e.data;
+				if(element != null)
+				{
+					for(var i: int = 0; i < numElements; i++)
+					{
+						var tab: DTreeTabContent = DTreeTabContent(getElementAt(i))
+						if(tab != null && tab.dtreeData != null)
+						{
+							if(checkModule(tab.treeCanvas, element, tab))
+							{
+								break;
+							}
+							if(checkModule(tab.levels, element, tab))
+							{
+								break;
+							}
+						}
+					}
+				}
+				initView();
+			}
+		]]>
+	</fx:Script>
+</tx:TabNavigator>
