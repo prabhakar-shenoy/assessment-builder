@@ -15,4 +15,4 @@ Tink https://code.google.com/p/tink/
 todo
 
 remove dependency on www.assessmenttree.com and make it generic client.
-add automated ant build script.
+add ant build script.
